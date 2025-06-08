@@ -1,34 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-Resume Analyzer Pro - Complete Version with Dynamic Learning
+Resume Analyzer Pro - Streamlit-Compatible Version
 """
 
 import streamlit as st
-from streamlit_extras.colored_header import colored_header
-
-# Safe imports with error handling
-def safe_import(module_name, pip_name=None):
-    try:
-        return __import__(module_name)
-    except ImportError:
-        pip_name = pip_name or module_name
-        st.error(f"⚠️ Missing required package: '{pip_name}'. Install with: `pip install {pip_name}`")
-        st.stop()
-
-# Import all dependencies safely
-joblib = safe_import('joblib')
-time = safe_import('time')
-make_pipeline = safe_import('sklearn.pipeline', 'scikit-learn').make_pipeline
-TfidfVectorizer = safe_import('sklearn.feature_extraction.text', 'scikit-learn').TfidfVectorizer
-StandardScaler = safe_import('sklearn.preprocessing', 'scikit-learn').StandardScaler
-LogisticRegression = safe_import('sklearn.linear_model', 'scikit-learn').LogisticRegression
-KMeans = safe_import('sklearn.cluster', 'scikit-learn').KMeans
-px = safe_import('plotly.express')
-re = safe_import('re')
-os = safe_import('os')
-pd = safe_import('pandas')
-BytesIO = safe_import('io').BytesIO
-datetime = safe_import('datetime')
+import joblib
+import time
+from sklearn.pipeline import make_pipeline
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.cluster import KMeans
+import re
+import os
+import pandas as pd
+from io import BytesIO
+import datetime
 
 # Set page config
 st.set_page_config(
@@ -150,68 +137,25 @@ def extract_text_from_file(uploaded_file):
     file_bytes = uploaded_file.read()
     uploaded_file.seek(0)  # Reset file pointer
 
-    # PDF Extraction
-    if uploaded_file.type == "application/pdf":
-        try:
-            import PyPDF2
-            try:
-                reader = PyPDF2.PdfReader(BytesIO(file_bytes))
-                text = "\n".join([page.extract_text() or "" for page in reader.pages])
-                if text.strip(): return text
-            except PyPDF2.errors.PdfReadError:
-                st.warning("PyPDF2 couldn't read this PDF (might be scanned/image-based)")
-        except ImportError:
-            st.warning("PyPDF2 not available for PDF extraction")
-
-        try:
-            import pdfplumber
-            with pdfplumber.open(BytesIO(file_bytes)) as pdf:
-                text = "\n".join([page.extract_text() or "" for page in pdf.pages])
-            if text.strip(): return text
-        except ImportError:
-            st.warning("pdfplumber not available for PDF extraction")
-        except Exception as e:
-            st.warning(f"pdfplumber extraction failed: {str(e)}")
-
-    # DOCX Extraction
-    elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        try:
-            import docx2txt
-            text = docx2txt.process(BytesIO(file_bytes))
-            if text.strip(): return text
-        except ImportError:
-            st.warning("docx2txt not available for DOCX extraction")
-        except Exception as e:
-            st.warning(f"docx2txt extraction failed: {str(e)}")
-
-    # Plain Text
-    elif uploaded_file.type == "text/plain":
-        try:
-            text = file_bytes.decode("utf-8", errors="replace")
-            if text.strip(): return text
-        except UnicodeDecodeError:
-            try:
-                text = file_bytes.decode("latin-1", errors="replace")
-                if text.strip(): return text
-            except Exception as e:
-                st.warning(f"Text decoding failed: {str(e)}")
-
-    # Final fallback
+    # Try plain text extraction first
     try:
         text = file_bytes.decode("utf-8", errors="replace")
         if text.strip(): return text
-    except:
-        pass
+    except UnicodeDecodeError:
+        try:
+            text = file_bytes.decode("latin-1", errors="replace")
+            if text.strip(): return text
+        except:
+            pass
 
+    # If plain text extraction fails, check for PDF or DOCX
     if not text.strip():
-        st.error("""
-        Could not extract any readable text. Possible reasons:
-        1. Scanned/image-based PDF
-        2. Password protected
-        3. Unsupported format
-        4. Corrupted file
+        st.warning("""
+        Could not extract text automatically. This might be because:
+        1. The file is a scanned/image-based PDF
+        2. The file is in an unsupported format
 
-        Try converting to DOCX or plain text.
+        For best results, please upload a text-based PDF, DOCX, or TXT file.
         """)
         return None
 
@@ -446,11 +390,17 @@ def display_results(result):
 def main():
     set_custom_style()
 
-    colored_header(
-        label="📝 Resume Analyzer Pro",
-        description="AI-powered resume analysis with dynamic learning",
-        color_name="blue-70"
-    )
+    # Custom header since we removed streamlit_extras
+    st.markdown("""
+    <div style="background:linear-gradient(to right, #1e3c72, #2a5298); 
+                padding:1.5rem; 
+                border-radius:0.5rem; 
+                margin-bottom:2rem;
+                color:white;">
+        <h1 style="margin:0; padding:0;">📝 Resume Analyzer Pro</h1>
+        <p style="margin:0; padding:0; opacity:0.8;">AI-powered resume analysis with dynamic learning</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     with st.expander("🔍 How It Works", expanded=True):
         st.markdown("""
