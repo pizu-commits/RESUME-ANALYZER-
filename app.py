@@ -4,24 +4,31 @@ Resume Analyzer Pro - Complete Version with Dynamic Learning
 """
 
 import streamlit as st
-def colored_header(label, description=None, color=None):
-    st.markdown(f"""
-    <h2 style='color:{color or "#4f8bf9"};'>{label}</h2>
-    {f"<p>{description}</p>" if description else ""}
-    """, unsafe_allow_html=True)
-import joblib
-import time
-from sklearn.pipeline import make_pipeline
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
-from sklearn.cluster import KMeans
-import plotly.express as px
-import re
-import os
-import pandas as pd
-from io import BytesIO
-import datetime
+from streamlit_extras.colored_header import colored_header
+
+# Safe imports with error handling
+def safe_import(module_name, pip_name=None):
+    try:
+        return __import__(module_name)
+    except ImportError:
+        pip_name = pip_name or module_name
+        st.error(f"⚠️ Missing required package: '{pip_name}'. Install with: `pip install {pip_name}`")
+        st.stop()
+
+# Import all dependencies safely
+joblib = safe_import('joblib')
+time = safe_import('time')
+make_pipeline = safe_import('sklearn.pipeline', 'scikit-learn').make_pipeline
+TfidfVectorizer = safe_import('sklearn.feature_extraction.text', 'scikit-learn').TfidfVectorizer
+StandardScaler = safe_import('sklearn.preprocessing', 'scikit-learn').StandardScaler
+LogisticRegression = safe_import('sklearn.linear_model', 'scikit-learn').LogisticRegression
+KMeans = safe_import('sklearn.cluster', 'scikit-learn').KMeans
+px = safe_import('plotly.express')
+re = safe_import('re')
+os = safe_import('os')
+pd = safe_import('pandas')
+BytesIO = safe_import('io').BytesIO
+datetime = safe_import('datetime')
 
 # Set page config
 st.set_page_config(
