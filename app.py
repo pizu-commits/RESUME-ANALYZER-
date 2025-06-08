@@ -4,7 +4,11 @@ Resume Analyzer Pro - Complete Version with Dynamic Learning
 """
 
 import streamlit as st
-from streamlit_extras.colored_header import colored_header
+def colored_header(label, description=None, color=None):
+    st.markdown(f"""
+    <h2 style='color:{color or "#4f8bf9"};'>{label}</h2>
+    {f"<p>{description}</p>" if description else ""}
+    """, unsafe_allow_html=True)
 import joblib
 import time
 from sklearn.pipeline import make_pipeline
